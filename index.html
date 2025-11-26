@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Singular-Style Photography — Pure HTML & CSS</title>
+  <meta name="description" content="A photography portfolio built only with HTML and CSS: category tabs, CSS lightbox, pricing, testimonials, and a booking modal." />
+  <style>
+    :root{--ink:#0b0b0b;--muted:#6b6b6b;--bg:#faf7f2;--card:#ffffff;--line:#ece8e0;--radius:16px}
+    *{box-sizing:border-box}
+    html,body{margin:0;height:100%;font-family:system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial,sans-serif;color:var(--ink);background:linear-gradient(#fff,var(--bg))}
+    a{color:inherit;text-decoration:none}
+    .container{max-width:1120px;margin:0 auto;padding:0 20px}
+
+    /* Buttons & badges */
+    .btn{display:inline-flex;align-items:center;gap:.6rem;border-radius:999px;border:1px solid var(--ink);background:var(--ink);color:#fff;padding:.75rem 1rem;transition:transform .07s}
+    .btn:hover{transform:translateY(-1px)}
+    .btn.ghost{background:transparent;color:var(--ink);border:1px solid #ddd}
+    .btn.block{display:flex;justify-content:center;width:100%}
+    .badge{display:inline-flex;align-items:center;gap:.4rem;border:1px solid #ddd;background:#fff;padding:.35rem .6rem;border-radius:999px;font-size:.75rem;color:#333}
+
+    /* Nav */
+    header.nav{position:sticky;top:0;background:rgba(255,255,255,.75);backdrop-filter:blur(10px) saturate(160%);border-bottom:1px solid #eee;z-index:10}
+    .bar{display:flex;align-items:center;justify-content:space-between;padding:14px 0}
+    .logo{display:grid;place-items:center;width:40px;height:40px;border-radius:12px;background:#000;color:#fff;font-weight:700}
+    .links{display:none;gap:.25rem}
+    .links a{padding:.5rem .75rem;border-radius:999px;color:#444}
+    .links a:hover{background:#f2f2f2}
+    @media(min-width:860px){.links{display:flex}}
+
+    /* Hero */
+    .hero{padding:52px 0}
+    .hero-grid{display:grid;gap:32px}
+    @media(min-width:900px){.hero-grid{grid-template-columns:1.1fr .9fr}}
+    .hero h1{font-size:clamp(32px,4vw,56px);line-height:1.05;margin:10px 0}
+    .hero p{max-width:600px;color:var(--muted)}
+    .tiles{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+    .tiles img{width:100%;height:160px;object-fit:cover;border-radius:14px;box-shadow:0 6px 18px rgba(0,0,0,.06)}
+    .tiles img.wide{grid-column:span 2;height:220px}
+
+    /* Sections */
+    section{padding:64px 0}
+    h2{font-size:clamp(26px,3vw,42px);margin:6px 0 8px}
+    .sub{color:var(--muted);max-width:680px}
+
+    /* Tabs (pure CSS) */
+    .tabs{margin-top:12px}
+    .tabs .tab-controls{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px}
+    .tabs input{position:absolute;opacity:0;pointer-events:none}
+    .chip{border:1px solid #ddd;background:#fff;border-radius:999px;padding:.5rem .9rem;font-size:.9rem;cursor:pointer;user-select:none}
+    .tabs input:checked + label{background:#0b0b0b;color:#fff;border-color:#0b0b0b}
+
+    /* Gallery grids for each tab */
+    .gallery{display:none;column-count:1;column-gap:16px}
+    @media(min-width:700px){.gallery{column-count:2}}
+    @media(min-width:1020px){.gallery{column-count:3}}
+    .card{break-inside:avoid;margin:0 0 16px;border-radius:14px;overflow:hidden;box-shadow:0 8px 24px rgba(0,0,0,.06);background:#fff;border:1px solid #eee}
+    .card img{width:100%;display:block}
+
+    /* Show correct panel when tab checked */
+    #tab-all:checked ~ .panels #panel-all,
+    #tab-wed:checked ~ .panels #panel-wed,
+    #tab-por:checked ~ .panels #panel-por,
+    #tab-tra:checked ~ .panels #panel-tra,
+    #tab-edi:checked ~ .panels #panel-edi,
+    #tab-pro:checked ~ .panels #panel-pro{display:block}
+
+    /* Services */
+    .grid{display:grid;gap:16px}
+    @media(min-width:900px){.grid.three{grid-template-columns:1fr 1fr 1fr}}
+    .tile{border:1px solid #eee;background:#fff;border-radius:var(--radius);padding:20px;box-shadow:0 6px 18px rgba(0,0,0,.04)}
+    .muted{color:var(--muted)}
+    .price{font-size:28px;font-weight:700;margin:6px 0}
+
+    /* About */
+    .about{display:grid;gap:24px}
+    @media(min-width:900px){.about{grid-template-columns:1fr 1fr}}
+    .about img{width:100%;border-radius:var(--radius);box-shadow:0 10px 28px rgba(0,0,0,.08)}
+
+    /* Testimonials */
+    .quotes{display:grid;gap:16px}
+    @media(min-width:900px){.quotes{grid-template-columns:1fr 1fr 1fr}}
+
+    /* Contact */
+    .row{display:grid;gap:16px}
+    @media(min-width:900px){.row{grid-template-columns:1fr 1fr}}
+    .input, textarea{width:100%;padding:.75rem .9rem;border:1px solid #ddd;border-radius:12px;font:inherit}
+    textarea{min-height:110px}
+
+    /* CSS Lightbox using :target */
+    .lb{position:fixed;inset:0;background:rgba(0,0,0,.92);display:none;align-items:center;justify-content:center;padding:20px;z-index:60}
+    .lb img{max-height:80vh;width:auto;border-radius:12px;box-shadow:0 18px 60px rgba(0,0,0,.5)}
+    .lb .nav{margin-top:10px;display:flex;gap:12px;justify-content:center}
+    .lb:target{display:flex}
+
+    /* Booking modal via :target */
+    #book{position:fixed;inset:0;background:rgba(0,0,0,.6);display:none;align-items:center;justify-content:center;padding:16px;z-index:50}
+    #book:target{display:flex}
+    .modal{background:#fff;border-radius:18px;max-width:580px;width:100%;padding:18px;border:1px solid #eee;box-shadow:0 16px 40px rgba(0,0,0,.18)}
+    .modal-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+
+    /* Footer */
+    footer{border-top:1px solid #eee;background:rgba(255,255,255,.6);padding:28px 0;margin-top:32px}
+    .foot{display:flex;flex-direction:column;gap:12px;align-items:center;justify-content:space-between}
+    @media(min-width:900px){.foot{flex-direction:row}}
+  </style>
+</head>
+<body>
+  <!-- NAV -->
+  <header class="nav">
+    <div class="container bar">
+      <div style="display:flex;gap:12px;align-items:center">
+        <div class="logo">SS</div>
+        <div>
+          <div style="font-weight:700;line-height:1">Singular-Style</div>
+          <div style="font-size:12px;color:#666">By Ankitesh</div>
+        </div>
+      </div>
+      <nav class="links">
+        <a href="#work">Work</a>
+        <a href="#services">Services</a>
+        <a href="#about">About</a>
+        <a href="#testimonials">Kind Words</a>
+        <a href="#contact">Contact</a>
+        <a class="btn" href="#book">Book a Session</a>
+      </nav>
+    </div>
+  </header>
+
+  <!-- HERO -->
+  <section class="hero">
+    <div class="container hero-grid">
+      <div>
+        <span class="badge">Award-winning imagery</span>
+        <h1>Quietly bold photography for people and brands with taste.</h1>
+        <p>I craft editorial-grade visuals that feel timeless and alive. From intimate weddings to sculptural product work, I translate your story into light.</p>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:16px">
+          <a class="btn" href="#book">Book your date</a>
+          <a class="btn ghost" href="#work">View portfolio →</a>
+        </div>
+        <div style="display:flex;gap:18px;margin-top:16px;color:#666;font-size:14px">
+          <span>📍 Based in: Your City</span>
+          <span>🌍 Shoots worldwide</span>
+        </div>
+      </div>
+      <div class="tiles">
+        <img class="wide" src="https://images.unsplash.com/photo-1520975916090-3105956dac38?q=80&w=1200&auto=format&fit=crop" alt="Editorial scene" />
+        <img src="https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?q=80&w=800&auto=format&fit=crop" alt="Portrait" />
+        <img src="https://images.unsplash.com/photo-1500534314209-a25ddb2bd429?q=80&w=800&auto=format&fit=crop" alt="Wedding" />
+        <!-- FIXED: hero product image src updated -->
+        <img class="wide" src="https://expertphotography.com/wp-content/uploads/2019/02/Abstract-Fine-Art-Photography-ionutcaras.jpg" alt="Product" />
+        <img src="https://images.unsplash.com/photo-1491553895911-0055eca6402d?q=80&w=800&auto=format&fit=crop" alt="Travel" />
+      </div>
+    </div>
+  </section>
+
+  <!-- WORK -->
+  <section id="work">
+    <div class="container">
+      <span class="badge">Portfolio</span>
+      <h2>Selected Work</h2>
+      <p class="sub">Browse by category. Pure HTML & CSS tabs. Click any image to open the CSS lightbox.</p>
+
+      <div class="tabs">
+        <!-- Tab controls -->
+        <div class="tab-controls">
+          <input type="radio" name="cat" id="tab-all" checked>
+          <label for="tab-all" class="chip">All</label>
+          <input type="radio" name="cat" id="tab-wed">
+          <label for="tab-wed" class="chip">Weddings</label>
+          <input type="radio" name="cat" id="tab-por">
+          <label for="tab-por" class="chip">Portraits</label>
+          <input type="radio" name="cat" id="tab-tra">
+          <label for="tab-tra" class="chip">Travel</label>
+          <input type="radio" name="cat" id="tab-edi">
+          <label for="tab-edi" class="chip">Editorial</label>
+          <input type="radio" name="cat" id="tab-pro">
+          <label for="tab-pro" class="chip">Product</label>
+        </div>
+
+        <!-- Panels -->
+        <div class="panels">
+          <!-- ALL -->
+          <div class="gallery" id="panel-all">
+            <a class="card" href="#img1"><img src="https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?q=80&w=1600&auto=format&fit=crop" alt="Wedding"/></a>
+            <a class="card" href="#img2"><img src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?q=80&w=1600&auto=format&fit=crop" alt="Portrait"/></a>
+            <a class="card" href="#img3"><img src="https://images.unsplash.com/photo-1501785888041-af3ef285b470?q=80&w=1600&auto=format&fit=crop" alt="Travel"/></a>
+            <a class="card" href="#img4"><img src="https://images.unsplash.com/photo-1472417583565-62e7bdeda490?q=80&w=1600&auto=format&fit=crop" alt="Editorial"/></a>
+            <a class="card" href="#img5"><img src="https://images.unsplash.com/photo-1581291519195-ef11498d1cf5?q=80&w=1600&auto=format&fit=crop" alt="Product"/></a>
+            <a class="card" href="#img6"><img src="https://images.unsplash.com/photo-1529626455594-4ff0802cfb7e?q=80&w=1200&auto=format&fit=crop" alt="Wedding 2"/></a>
+          </div>
+
+          <!-- Individual categories (repeat subset) -->
+          <div class="gallery" id="panel-wed">
+            <a class="card" href="#img1"><img src="https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?q=80&w=1600&auto=format&fit=crop" alt="Wedding"/></a>
+            <a class="card" href="#img6"><img src="https://images.unsplash.com/photo-1529626455594-4ff0802cfb7e?q=80&w=1200&auto=format&fit=crop" alt="Wedding 2"/></a>
+          </div>
+          <div class="gallery" id="panel-por">
+            <a class="card" href="#img2"><img src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?q=80&w=1600&auto=format&fit=crop" alt="Portrait"/></a>
+          </div>
+          <div class="gallery" id="panel-tra">
+            <a class="card" href="#img3"><img src="https://images.unsplash.com/photo-1501785888041-af3ef285b470?q=80&w=1600&auto=format&fit=crop" alt="Travel"/></a>
+          </div>
+          <div class="gallery" id="panel-edi">
+            <a class="card" href="#img4"><img src="https://images.unsplash.com/photo-1472417583565-62e7bdeda490?q=80&w=1600&auto=format&fit=crop" alt="Editorial"/></a>
+          </div>
+          <div class="gallery" id="panel-pro">
+            <a class="card" href="#img5"><img src="https://images.unsplash.com/photo-1581291519195-ef11498d1cf5?q=80&w=1600&auto=format&fit=crop" alt="Product"/></a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CSS LIGHTBOX PAGES (use :target) -->
+  <div class="lb" id="img1">
+    <div style="text-align:center">
+      <img src="https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?q=80&w=1600&auto=format&fit=crop" alt="Wedding large" />
+      <div class="nav"><a class="btn ghost" href="#img6">◀ Prev</a><a class="btn" href="#work">Close ✕</a><a class="btn ghost" href="#img2">Next ▶</a></div>
+    </div>
+  </div>
+  <div class="lb" id="img2">
+    <div style="text-align:center">
+      <img src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?q=80&w=1600&auto=format&fit=crop" alt="Portrait large" />
+      <div class="nav"><a class="btn ghost" href="#img1">◀ Prev</a><a class="btn" href="#work">Close ✕</a><a class="btn ghost" href="#img3">Next ▶</a></div>
+    </div>
+  </div>
+  <div class="lb" id="img3">
+    <div style="text-align:center">
+      <img src="https://images.unsplash.com/photo-1501785888041-af3ef285b470?q=80&w=1600&auto=format&fit=crop" alt="Travel large" />
+      <div class="nav"><a class="btn ghost" href="#img2">◀ Prev</a><a class="btn" href="#work">Close ✕</a><a class="btn ghost" href="#img4">Next ▶</a></div>
+    </div>
+  </div>
+  <div class="lb" id="img4">
+    <div style="text-align:center">
+      <img src="https://images.unsplash.com/photo-1472417583565-62e7bdeda490?q=80&w=1600&auto=format&fit=crop" alt="Editorial large" />
+      <div class="nav"><a class="btn ghost" href="#img3">◀ Prev</a><a class="btn" href="#work">Close ✕</a><a class="btn ghost" href="#img5">Next ▶</a></div>
+    </div>
+  </div>
+  <div class="lb" id="img5">
+    <div style="text-align:center">
+      <img src="https://images.unsplash.com/photo-1581291519195-ef11498d1cf5?q=80&w=1600&auto=format&fit=crop" alt="Product large" />
+      <div class="nav"><a class="btn ghost" href="#img4">◀ Prev</a><a class="btn" href="#work">Close ✕</a><a class="btn ghost" href="#img6">Next ▶</a></div>
+    </div>
+  </div>
+  <div class="lb" id="img6">
+    <div style="text-align:center">
+      <img src="https://images.unsplash.com/photo-1529626455594-4ff0802cfb7e?q=80&w=1200&auto=format&fit=crop" alt="Wedding 2 large" />
+      <div class="nav"><a class="btn ghost" href="#img5">◀ Prev</a><a class="btn" href="#work">Close ✕</a><a class="btn ghost" href="#img1">Next ▶</a></div>
+    </div>
+  </div>
+
+  <!-- SERVICES -->
+  <section id="services">
+    <div class="container">
+      <span class="badge">Services</span>
+      <h2>Simple, transparent collections</h2>
+      <p class="sub">Every booking includes creative direction, color-graded finals, and a private gallery.</p>
+      <div class="grid three" style="margin-top:14px">
+        <div class="tile">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px"><h3>Essentials</h3><span class="badge">Starter</span></div>
+          <div class="price">₹25,000</div>
+          <div class="muted">Up to 2 hours • 30 selects • Online gallery</div>
+          <ul class="muted" style="margin:12px 0 0 18px"><li>Creative brief</li><li>Color grading</li><li>3-day preview</li></ul>
+          <a class="btn block" style="margin-top:14px" href="#book">Book this</a>
+        </div>
+        <div class="tile" style="border:2px solid #111">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px"><h3>Signature</h3><span class="badge">Popular</span></div>
+          <div class="price">₹60,000</div>
+          <div class="muted">Half-day • 75 selects • Priority delivery</div>
+          <ul class="muted" style="margin:12px 0 0 18px"><li>Location scouting</li><li>Assistant</li><li>Skin-tone finesse</li></ul>
+          <a class="btn block" style="margin-top:14px" href="#book">Book this</a>
+        </div>
+        <div class="tile">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px"><h3>Editorial Day</h3><span class="badge">Pro</span></div>
+          <div class="price">₹95,000</div>
+          <div class="muted">Full-day • 150 selects • Art direction</div>
+          <ul class="muted" style="margin:12px 0 0 18px"><li>Production support</li><li>Shotlist</li><li>Set design consult</li></ul>
+          <a class="btn block" style="margin-top:14px" href="#book">Book this</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ABOUT -->
+  <section id="about">
+    <div class="container about">
+      <div>
+        <span class="badge">About</span>
+        <h2>Hi, I’m Ankitesh</h2>
+        <p class="sub">I photograph with empathy and structure—balancing spontaneous life with a clean, editorial finish.</p>
+        <p style="margin-top:10px">Over the past decade I’ve photographed humans, products, and places in 12+ countries. My practice blends art-direction with a documentarian’s patience. I design shoots that feel calm, then move quickly when the light is right.</p>
+        <div class="grid" style="grid-template-columns:1fr 1fr;gap:12px;margin-top:14px">
+          <div class="tile" style="text-align:center"><div style="font-weight:700;font-size:22px">12+</div><div class="muted">Countries</div></div>
+          <div class="tile" style="text-align:center"><div style="font-weight:700;font-size:22px">300+</div><div class="muted">Clients</div></div>
+          <div class="tile" style="text-align:center"><div style="font-weight:700;font-size:22px">7 days</div><div class="muted">Turnaround</div></div>
+          <div class="tile" style="text-align:center"><div style="font-weight:700;font-size:22px">100%</div><div class="muted">Archived backups</div></div>
+        </div>
+      </div>
+      <img src="https://images.unsplash.com/photo-1524231757912-21f4fe3a7200?q=80&w=1200&auto=format&fit=crop" alt="Photographer at work" />
+    </div>
+  </section>
+
+  <!-- TESTIMONIALS -->
+  <section id="testimonials">
+    <div class="container">
+      <span class="badge">Testimonials</span>
+      <h2>Kind words from clients</h2>
+      <div class="quotes" style="margin-top:10px">
+        <div class="tile"><span class="badge" style="margin-bottom:8px;display:inline-flex">Wedding</span><p>“Every frame felt like a still from a film. Calm presence, razor-sharp instincts.”</p><div class="muted" style="margin-top:10px">— Aisha & Rohan</div></div>
+        <div class="tile"><span class="badge" style="margin-bottom:8px;display:inline-flex">Product</span><p>“Transformed our product launch. Clean, sculptural, and on brand.”</p><div class="muted" style="margin-top:10px">— Mira, Creative Director</div></div>
+        <div class="tile"><span class="badge" style="margin-bottom:8px;display:inline-flex">Editorial</span><p>“He sees people. Our team actually enjoyed being photographed—rare!”</p><div class="muted" style="margin-top:10px">— Dev, Founder</div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CONTACT -->
+  <section id="contact">
+    <div class="container">
+      <span class="badge">Contact</span>
+      <h2>Let’s make something considered</h2>
+      <p class="sub">Prefer email or a quick call? I respond within 24 hours.</p>
+      <div class="row" style="margin-top:12px">
+        <div class="tile">
+          <div style="display:flex;gap:8px;flex-wrap:wrap" class="muted">
+            <span class="badge">✉️ hello@yourstudio.com</span>
+            <span class="badge">📞 +91 98765 43210</span>
+          </div>
+          <!-- mailto keeps it HTML-only -->
+          <form style="margin-top:14px" action="mailto:hello@yourstudio.com" method="post" enctype="text/plain">
+            <input class="input" name="name" placeholder="Your name" required />
+            <input class="input" type="email" name="email" placeholder="Email" required style="margin-top:10px" />
+            <textarea class="input" name="message" placeholder="What would you like to create?" style="margin-top:10px"></textarea>
+            <div style="display:flex;gap:10px;margin-top:12px">
+              <button class="btn" type="submit">Email inquiry</button>
+              <a class="btn ghost" href="https://instagram.com" target="_blank" rel="noreferrer">Instagram</a>
+            </div>
+          </form>
+        </div>
+        <div class="tile">
+          <h3>Working style</h3>
+          <ul class="muted" style="margin-top:10px">
+            <li>• Pre-production call to clarify mood, references, and constraints.</li>
+            <li>• Simple, efficient crew. I keep sets light unless scale demands more.</li>
+            <li>• Delivery via private gallery + curated contact sheet.</li>
+            <li>• Archival storage of RAWs and finals for 1 year.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- BOOKING MODAL (HTML/CSS only) -->
+  <div id="book">
+    <div class="modal">
+      <div class="modal-head">
+        <h3>Book a Session</h3>
+        <a class="btn ghost" href="#">✕</a>
+      </div>
+      <form action="mailto:hello@yourstudio.com" method="post" enctype="text/plain">
+        <div style="display:grid;gap:10px;grid-template-columns:1fr 1fr">
+          <input class="input" name="name" placeholder="Full name" required />
+          <input class="input" type="email" name="email" placeholder="Email" required />
+        </div>
+        <div style="display:grid;gap:10px;grid-template-columns:1fr 1fr;margin-top:10px">
+          <input class="input" name="phone" placeholder="Phone" />
+          <input class="input" name="category" placeholder="Category (e.g., Weddings)" value="Weddings" />
+        </div>
+        <div style="display:grid;gap:10px;grid-template-columns:1fr 1fr;margin-top:10px">
+          <input class="input" type="date" name="date" />
+          <input class="input" type="time" name="time" />
+        </div>
+        <textarea class="input" name="message" placeholder="What are you envisioning?" style="margin-top:10px"></textarea>
+        <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:12px">
+          <a class="btn ghost" href="#">Cancel</a>
+          <button class="btn" type="submit">Send Request</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- FOOTER -->
+  <footer>
+    <div class="container foot">
+      <div style="display:flex;gap:12px;align-items:center"><div class="logo">SS</div><div><div style="font-weight:700;line-height:1">Singular-Style</div><div class="muted" style="font-size:12px">© 2025 All rights reserved</div></div></div>
+      <div class="muted" style="display:flex;gap:14px;flex-wrap:wrap">
+        <a href="#work">Work</a><a href="#services">Services</a><a href="#about">About</a><a href="#contact">Contact</a>
+      </div>
+      <a class="btn ghost" href="#book">Book a Session</a>
+    </div>
+  </footer>
+</body>
+</html>
